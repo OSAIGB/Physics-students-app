@@ -31,13 +31,22 @@ export const saveQuizResult = async (data: {
   score: number;
   totalQuestions: number;
   ip: string;
+  percentage?: number;
 }) => {
   try {
-    const docRef = await addDoc(collection(db, "submissions"), {
+    const payload = {
       ...data,
+      percentage: data.percentage ?? Math.round((data.score / data.totalQuestions) * 100),
       timestamp: serverTimestamp(),
-    });
-    return docRef.id;
+    } as any;
+
+    // Log what we are saving (appears in the browser console during development)
+    console.log('Saving quiz result to Firestore:', payload);
+
+    const docRef = await addDoc(collection(db, "submissions"), payload);
+
+    console.log('Saved quiz result docId:', docRef.id);
+    return { id: docRef.id, ...payload };
   } catch (error) {
     console.error("Error saving result: ", error);
     throw error;

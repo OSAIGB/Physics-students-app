@@ -22,5 +22,6 @@ export interface SubmissionRecord {
   score: number;
   totalQuestions: number;
   ip: string;
+  percentage?: number;
   timestamp: any; // Firestore Timestamp
 }

@@ -6,7 +6,7 @@ import { saveQuizResult, checkIpLockout, getUserIP } from './firebase';
 
 // Helper Components (defined outside to prevent re-renders)
 const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <div className={`bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-8 max-w-2xl w-full mx-4 transition-all ${className}`}>
+  <div className={`bg-slate-900 border-4 border-slate-800 rounded-2xl shadow-2xl p-3 sm:p-4 max-w-3xl w-full mx-2 sm:mx-4 transition-all ${className}`}>
     {children}
   </div>
 );
@@ -30,7 +30,7 @@ const Button: React.FC<{
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`px-6 py-3 rounded-lg font-semibold transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${className}`}
+      className={`px-4 py-2 rounded-md text-sm font-semibold transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${className}`}
     >
       {children}
     </button>
@@ -95,15 +95,21 @@ const App: React.FC = () => {
     setState(prev => ({ ...prev, status: 'submitting' }));
     
     const finalScore = calculateScore(currentState.answers);
+    const percentage = Math.round((finalScore / QUESTIONS.length) * 100);
     
     try {
-      await saveQuizResult({
+      const saved = await saveQuizResult({
         name: currentState.userName,
         email: currentState.userEmail,
         score: finalScore,
         totalQuestions: QUESTIONS.length,
         ip: ip,
+        percentage,
       });
+
+      // Log saved submission (appears in browser console)
+      console.log('Submission saved:', saved);
+
       setState(prev => ({
         ...prev,
         status: 'finished',
@@ -113,6 +119,14 @@ const App: React.FC = () => {
     } catch (err) {
       console.error("Submission failed", err);
       // Fallback for UI if Firebase fails
+      console.log('Final submission (local fallback):', {
+        name: currentState.userName,
+        email: currentState.userEmail,
+        score: finalScore,
+        totalQuestions: QUESTIONS.length,
+        ip: ip,
+        percentage,
+      });
       setState(prev => ({
         ...prev,
         status: 'finished',
@@ -246,17 +260,18 @@ const App: React.FC = () => {
 
   if (state.status === 'auth') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black">
-        <header className="mb-12 text-center">
-          <h1 className="text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400 mb-2">
-            PHYSICS QUIZ PRO
-          </h1>
-          <p className="text-slate-500 uppercase tracking-widest text-sm font-semibold">Department of Advanced Mechanics</p>
-        </header>
+  <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black">
+    <header className="mb-4 text-center">
+      <h1 className="text-3xl md:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400 mb-2">
+        PHYSICS QUIZ PRO
+      </h1>
+      <p className="text-slate-500 uppercase tracking-widest text-sm font-semibold">Department of Advanced Mechanics</p>
+    </header>
 
-        <Card>
-          <form onSubmit={handleStartQuiz} className="space-y-6">
-            <h2 className="text-2xl font-bold mb-6 text-center">Student Registration</h2>
+    {/* Add width classes here */}
+    <Card className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl xl:max-w-4xl p-6">
+      <form onSubmit={handleStartQuiz} className="space-y-5">
+        <h2 className="text-2xl font-bold text-center text-white">Enter Your Details to Start</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-400 mb-1">Full Name</label>
@@ -310,25 +325,25 @@ const App: React.FC = () => {
         <div className="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-md border-b border-slate-800 pb-4">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="h-10 w-10 bg-indigo-600 rounded-full flex items-center justify-center font-bold text-lg">
+              <div className="h-8 w-8 bg-indigo-600 rounded-full flex items-center justify-center font-bold text-base">
                 {state.currentQuestionIndex + 1}
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Physics Assessment</h3>
-                <p className="text-lg font-bold">{state.userName}</p>
+                <p className="text-base md:text-lg font-bold">{state.userName}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-8">
               <div className="text-right">
                 <p className="text-xs text-slate-500 font-bold uppercase">Global Time</p>
-                <p className={`text-xl font-mono ${globalTimeLeft < 60 ? 'text-red-500' : 'text-indigo-400'}`}>
+                <p className={`text-lg md:text-xl font-mono ${globalTimeLeft < 60 ? 'text-red-500' : 'text-indigo-400'}`}>
                   {formatTime(globalTimeLeft)}
                 </p>
               </div>
               <div className="text-right">
                 <p className="text-xs text-slate-500 font-bold uppercase">Question Time</p>
-                <p className={`text-xl font-mono ${questionTimeLeft < 10 ? 'text-red-500 animate-pulse' : 'text-cyan-400'}`}>
+                <p className={`text-lg md:text-xl font-mono ${questionTimeLeft < 10 ? 'text-red-500 animate-pulse' : 'text-cyan-400'}`}>
                   0:{questionTimeLeft.toString().padStart(2, '0')}
                 </p>
               </div>
@@ -344,10 +359,10 @@ const App: React.FC = () => {
         </div>
 
         {/* Question Area */}
-        <div className="flex-1 flex items-center justify-center py-12">
-          <Card className="shadow-[0_0_50px_-12px_rgba(79,70,229,0.3)]">
+        <div className="flex-1 flex items-center justify-center py-8 px-0 sm:px-4">
+          <Card className="shadow-[0_0_50px_-12px_rgba(79,70,229,0.3)] w-full max-w-full sm:max-w-2xl mx-0 sm:mx-auto rounded-none sm:rounded-2xl">
             <div className="mb-8">
-              <h2 className="text-2xl font-medium leading-relaxed">
+              <h2 className="text-lg md:text-2xl font-medium leading-relaxed">
                 {question.q}
               </h2>
             </div>
@@ -359,18 +374,18 @@ const App: React.FC = () => {
                   <button
                     key={idx}
                     onClick={() => handleSelectAnswer(idx)}
-                    className={`w-full text-left p-5 rounded-xl border-2 transition-all flex items-center gap-4 group ${
+                    className={`w-full text-left p-3 rounded-lg border-2 transition-all flex items-center gap-3 group ${
                       isSelected 
                         ? 'bg-indigo-600/20 border-indigo-500' 
                         : 'bg-slate-800/50 border-slate-700 hover:border-slate-500'
                     }`}
                   >
-                    <div className={`h-8 w-8 rounded-full border-2 flex items-center justify-center font-bold text-sm ${
+                    <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center font-bold text-xs ${
                       isSelected ? 'bg-indigo-500 border-indigo-500' : 'border-slate-600 group-hover:border-slate-400'
                     }`}>
                       {String.fromCharCode(65 + idx)}
                     </div>
-                    <span className="text-lg">{option}</span>
+                    <span className="text-sm md:text-lg">{option}</span>
                   </button>
                 );
               })}
@@ -408,12 +423,12 @@ const App: React.FC = () => {
     
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 via-black to-black">
-        <Card className="border-indigo-500/30 text-center relative overflow-hidden">
+        <Card className="border-indigo-500/30 text-center relative overflow-hidden max-w-xl sm:max-w-2xl">
           {/* Confetti effect placeholder */}
           <div className="absolute inset-0 bg-indigo-500/5 pointer-events-none"></div>
           
           <i className="fas fa-check-circle text-6xl text-emerald-500 mb-6"></i>
-          <h1 className="text-4xl font-black mb-2">Quiz Completed</h1>
+          <h1 className="text-3xl md:text-4xl font-black mb-2">Quiz Completed</h1>
           <p className="text-slate-400 mb-8 uppercase tracking-widest text-sm">Submission Finalized</p>
           
           <div className="grid grid-cols-2 gap-4 mb-8">

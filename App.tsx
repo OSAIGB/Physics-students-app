@@ -92,8 +92,22 @@ const App: React.FC = () => {
     const currentState = stateRef.current;
     if (currentState.status !== 'quiz' && currentState.status !== 'submitting') return;
 
+    // Before attempting to submit, ensure this IP hasn't already submitted
+    try {
+      const alreadyLocked = await checkIpLockout(ip, IP_LOCKOUT_DURATION);
+      if (alreadyLocked) {
+        setIsLocked(true);
+        setState(prev => ({ ...prev, status: 'locked' }));
+        alert('Submission blocked: an entry from this IP address already exists. You are locked out for 30 minutes.');
+        return;
+      }
+    } catch (err) {
+      console.error('Lockout check failed', err);
+      // If the lockout check fails, allow submission to proceed but log the error.
+    }
+
     setState(prev => ({ ...prev, status: 'submitting' }));
-    
+
     const finalScore = calculateScore(currentState.answers);
     const percentage = Math.round((finalScore / QUESTIONS.length) * 100);
     

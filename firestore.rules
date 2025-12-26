@@ -1,11 +1,21 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /submissions/{submissionId} {
-      allow create: if true;  // Allow any valid addDoc to test saving
-      allow read, update, delete: if false;
+    match /quizResults/{resultId} { // <--- Add this block for the 'quizResults' collection
+      allow create: if true;        // Allow creation of documents in 'quizResults'
+      allow read, update, delete: if false; // Restrict other operations if not needed
     }
 
+    match /submissions/{submissionId} {
+      allow create: if true;
+      // Allow reads so the client can check for prior submissions by IP.
+      // Note: allowing public reads can expose data; for production consider
+      // implementing a server-side (Cloud Function) lockout check instead.
+      allow read: if true;
+      allow update, delete: if false;
+    }
+
+    // This catch-all still applies to any other collections not explicitly matched
     match /{document=**} {
       allow read, write: if false;
     }

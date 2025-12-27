@@ -3,6 +3,7 @@ export interface Question {
   q: string;
   a: string[];
   c: number;
+  topics?: string[];
 }
 
 export interface QuizState {

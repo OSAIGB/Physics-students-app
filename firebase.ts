@@ -11,6 +11,14 @@ import {
   orderBy,
   limit
 } from "firebase/firestore";
+import { 
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  User,
+  onAuthStateChanged
+} from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: "AIzaSyA7gHHV6qxnforZSIZVlHe6xg2YgwA8ecA",
@@ -24,6 +32,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
+export const auth = getAuth(app);
 
 export const saveQuizResult = async (data: {
   name: string;
@@ -51,6 +60,36 @@ export const saveQuizResult = async (data: {
     console.error("Error saving result: ", error);
     throw error;
   }
+};
+
+export const checkEmailSubmitted = async (email: string): Promise<boolean> => {
+  const q = query(
+    collection(db, "submissions"),
+    where("email", "==", email),
+    orderBy("timestamp", "desc"),
+    limit(1)
+  );
+
+  const querySnapshot = await getDocs(q);
+  return !querySnapshot.empty;
+};
+
+export const authSignIn = async (email: string, password: string): Promise<User> => {
+  const res = await signInWithEmailAndPassword(auth, email, password);
+  return res.user;
+};
+
+export const authSignUp = async (email: string, password: string): Promise<User> => {
+  const res = await createUserWithEmailAndPassword(auth, email, password);
+  return res.user;
+};
+
+export const authSignOut = async () => {
+  await firebaseSignOut(auth);
+};
+
+export const onAuthChanged = (cb: (u: User | null) => void) => {
+  return onAuthStateChanged(auth, cb);
 };
 
 export const checkIpLockout = async (ip: string, lockoutDuration: number): Promise<boolean> => {

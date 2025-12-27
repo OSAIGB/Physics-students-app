@@ -376,6 +376,16 @@ const App: React.FC = () => {
         <div className="flex-1 flex items-center justify-center py-8 px-0 sm:px-4">
           <Card className="shadow-[0_0_50px_-12px_rgba(79,70,229,0.3)] w-full max-w-full sm:max-w-2xl mx-0 sm:mx-auto rounded-none sm:rounded-2xl">
             <div className="mb-8">
+              {question.topics && question.topics.length > 0 && (
+                <div className="mb-3 flex flex-wrap gap-2">
+                  {question.topics.map((t, i) => (
+                    <span key={i} className="text-xs uppercase text-slate-400 bg-slate-800/40 px-2 py-1 rounded-md border border-slate-700">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              )}
+
               <h2 className="text-lg md:text-2xl font-medium leading-relaxed">
                 {question.q}
               </h2>
